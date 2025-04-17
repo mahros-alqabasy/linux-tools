@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y dpkg-dev debhelper fakeroot shc gcc
+          sudo apt install -y dpkg-dev debhelper fakeroot
 
       - name: Prepare Package Structure
         run: |
@@ -29,18 +29,19 @@ jobs:
           mkdir -p pkg/usr/share/man/man1
           mkdir -p pkg/usr/share/doc/linux-tools
 
-          # Copy control file
+          # Copy existing control file
           cp debian/control pkg/DEBIAN/control
 
-          # Compile scripts to binaries
-          for script in src/scripts/*.sh; do
-            script_name=$(basename "$script" .sh)
-            shc -f "$script" -o "pkg/usr/bin/$script_name"
-            chmod +x "pkg/usr/bin/$script_name"
-          done
+          # Copy all scripts to /usr/bin/
+          cp src/scripts/*.sh pkg/usr/bin/
+
+          # Make scripts executable
+          chmod +x pkg/usr/bin/*.sh
 
           # Copy man pages
           cp src/man/man1/*.1 pkg/usr/share/man/man1/
+
+          # Compress man pages
           gzip -f pkg/usr/share/man/man1/*.1
 
           # Copy documentation
