@@ -19,9 +19,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo add-apt-repository -y ppa:neurobin/ppa
-          sudo apt-get update
-          sudo apt-get install -y dpkg-dev debhelper fakeroot shc gcc
+          sudo apt update
+          sudo apt install -y dpkg-dev debhelper fakeroot shc gcc
 
       - name: Prepare Package Structure
         run: |
