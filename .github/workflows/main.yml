@@ -10,48 +10,76 @@ permissions:
 
 jobs:
   build-deb:
+    name: Build Debian Package
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up environment
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y dpkg-dev debhelper fakeroot
 
-      - name: Prepare package structure
+      - name: Prepare Package Structure
         run: |
           mkdir -p pkg/DEBIAN
           mkdir -p pkg/opt/linux-tools
           mkdir -p pkg/usr/share/man/man1
+          mkdir -p pkg/usr/share/doc/linux-tools
 
-          cp scripts/rotn.sh pkg/opt/linux-tools/rotn
-          chmod +x pkg/opt/linux-tools/rotn
+          # Create DEBIAN/control file
+          cat <<EOF > pkg/DEBIAN/control
+Package: linux-tools
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: Mahros <mahros.elqabasy@gmail.com>
+Description: Collection of Linux command-line tools.
+Depends: bash (>= 5.0)
+EOF
 
-          cp man/rotn.1.gz pkg/usr/share/man/man1/
+          # Copy all scripts to /opt/linux-tools/
+          cp src/scripts/*.sh pkg/opt/linux-tools/
 
-          cp debian/control pkg/DEBIAN/control
-          cp debian/postinst pkg/DEBIAN/postinst
-          chmod +x pkg/DEBIAN/postinst
+          # Make scripts executable
+          chmod +x pkg/opt/linux-tools/*.sh
 
-      - name: Build .deb package
-        run: dpkg-deb --build pkg linux-tools.deb
+          # Copy man pages
+          cp src/man/man1/*.1 pkg/usr/share/man/man1/
 
-      - name: Upload artifact
+          # Compress man pages
+          gzip -f pkg/usr/share/man/man1/*.1
+
+          # Copy documentation
+          cp src/docs/COMMANDS/*.md pkg/usr/share/doc/linux-tools/
+
+          # Copy postinst script
+          cp debian/postinst pkg/DEBIAN/
+          chmod 755 pkg/DEBIAN/postinst
+
+      - name: Build .deb Package
+        run: dpkg-deb --build pkg linux-tools_1.0.0-1_all.deb
+
+      - name: Upload Debian package artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-tools-deb
-          path: linux-tools.deb
+          path: linux-tools_1.0.0-1_all.deb
 
   release:
+    name: Create GitHub Release
     needs: build-deb
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Download artifact
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download Debian package artifact
         uses: actions/download-artifact@v4
         with:
           name: linux-tools-deb
@@ -59,9 +87,9 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: linux-tools.deb
+          files: linux-tools_1.0.0-1_all.deb
           tag_name: v1.0.0
           release_name: "Release v1.0.0"
-          body: "New release of linux-tools including rotn."
+          body: "🚀 New Debian package release: **v1.0.0**"
           draft: false
           prerelease: false
