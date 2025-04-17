@@ -1,0 +1,8 @@
+linux-tools (1.0.0-1) unstable; urgency=low
+
+  * Initial release of linux-tools package.
+  * Included 'rotn' script for Caesar cipher decryption.
+  * Added manual page for 'rotn' under /usr/share/man/man1/.
+  * Updated postinst script to create /opt/linux-tools directory and add it to PATH.
+
+ -- Mahros <mahros.elqabasy@gmail.com> Thu, 17 Apr 2025 02:09:56 +0200

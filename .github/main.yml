@@ -1,0 +1,67 @@
+name: Build and Release .deb Package
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up environment
+        run: |
+          sudo apt update
+          sudo apt install -y dpkg-dev debhelper fakeroot
+
+      - name: Prepare package structure
+        run: |
+          mkdir -p pkg/DEBIAN
+          mkdir -p pkg/opt/linux-tools
+          mkdir -p pkg/usr/share/man/man1
+
+          cp scripts/rotn.sh pkg/opt/linux-tools/rotn
+          chmod +x pkg/opt/linux-tools/rotn
+
+          cp man/rotn.1.gz pkg/usr/share/man/man1/
+
+          cp debian/control pkg/DEBIAN/control
+          cp debian/postinst pkg/DEBIAN/postinst
+          chmod +x pkg/DEBIAN/postinst
+
+      - name: Build .deb package
+        run: dpkg-deb --build pkg linux-tools.deb
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-tools-deb
+          path: linux-tools.deb
+
+  release:
+    needs: build-deb
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-tools-deb
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: linux-tools.deb
+          tag_name: v1.0.0
+          release_name: "Release v1.0.0"
+          body: "New release of linux-tools including rotn."
+          draft: false
+          prerelease: false

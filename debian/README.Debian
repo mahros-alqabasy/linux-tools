@@ -1,0 +1,8 @@
+linux-tools for Debian
+----------------------
+
+This package installs a collection of Linux command-line tools, including 'rotn'.
+
+After installation, the tools are located in /opt/linux-tools and are added to the system PATH.
+
+For any issues or contributions, please contact Mahros <mahros.elqabasy@gmail.com>.

@@ -1,0 +1,7 @@
+Package: linux-tools
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: Mahros mahros.elqabasy@gmail.com
+Description: Collection of Linux command-line tools including rotn.

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# postinst script for linux-tools package
+
+set -e
+
+# Define the tools directory
+TOOLS_DIR="/opt/linux-tools"
+
+# Check if the tools directory exists; if not, create it
+if [ ! -d "$TOOLS_DIR" ]; then
+    mkdir -p "$TOOLS_DIR"
+    echo "Created directory: $TOOLS_DIR"
+fi
+
+# Add the tools directory to the system PATH if it's not already included
+if ! grep -q "$TOOLS_DIR" /etc/environment; then
+    echo "Adding $TOOLS_DIR to PATH in /etc/environment"
+    echo "PATH=\"\$PATH:$TOOLS_DIR\"" | sudo tee -a /etc/environment > /dev/null
+fi
+
+# Provide feedback to the user
+echo "Installation complete. You can now use your tools from any location in the terminal."
+
+exit 0

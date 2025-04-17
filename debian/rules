@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+
+# Minimal rules file for linux-tools package
+
+%:
+	dh $@ --with=python3
+
+override_dh_auto_install:
+	# Install scripts to /opt/linux-tools
+	install -d $(DESTDIR)/opt/linux-tools
+	install -m 755 ../src/scripts/*.sh $(DESTDIR)/opt/linux-tools/
+
+	# Install man pages
+	install -d $(DESTDIR)/usr/share/man/man1
+	install -m 644 ../src/man/man1/*.1 $(DESTDIR)/usr/share/man/man1/
+
+	# Install documentation
+	install -d $(DESTDIR)/usr/share/doc/linux-tools
+	install -m 644 ../src/docs/COMMANDS/rotn.md $(DESTDIR)/usr/share/doc/linux-tools/
+
+	# Ensure scripts are executable
+	chmod +x $(DESTDIR)/opt/linux-tools/*.sh
