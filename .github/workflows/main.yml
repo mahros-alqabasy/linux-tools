@@ -25,18 +25,18 @@ jobs:
       - name: Prepare Package Structure
         run: |
           mkdir -p pkg/DEBIAN
-          mkdir -p pkg/opt/linux-tools
+          mkdir -p pkg/usr/bin
           mkdir -p pkg/usr/share/man/man1
           mkdir -p pkg/usr/share/doc/linux-tools
 
           # Copy existing control file
           cp debian/control pkg/DEBIAN/control
 
-          # Copy all scripts to /opt/linux-tools/
-          cp src/scripts/*.sh pkg/opt/linux-tools/
+          # Copy all scripts to /usr/bin/
+          cp src/scripts/*.sh pkg/usr/bin/
 
           # Make scripts executable
-          chmod +x pkg/opt/linux-tools/*.sh
+          chmod +x pkg/usr/bin/*.sh
 
           # Copy man pages
           cp src/man/man1/*.1 pkg/usr/share/man/man1/
@@ -47,9 +47,11 @@ jobs:
           # Copy documentation
           cp src/docs/COMMANDS/*.md pkg/usr/share/doc/linux-tools/
 
-          # Copy postinst script
-          cp debian/postinst pkg/DEBIAN/
-          chmod 755 pkg/DEBIAN/postinst
+          # Copy postinst script if it exists
+          if [ -f debian/postinst ]; then
+            cp debian/postinst pkg/DEBIAN/
+            chmod 755 pkg/DEBIAN/postinst
+          fi
 
       - name: Build .deb Package
         run: dpkg-deb --build pkg linux-tools_1.0.0-1_all.deb
@@ -78,7 +80,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: linux-tools_1.0.0-1_all.deb
+          files: linux-tools.deb
           tag_name: v1.0.0
           release_name: "Release v1.0.0"
           body: "🚀 New Debian package release: **v1.0.0**"
