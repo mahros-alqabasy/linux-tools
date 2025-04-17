@@ -33,10 +33,10 @@ jobs:
           cp debian/control pkg/DEBIAN/control
 
           # Copy all scripts to /usr/bin/
-          cp src/scripts/*.sh pkg/usr/bin/
+          cp src/scripts/* pkg/usr/bin/
 
           # Make scripts executable
-          chmod +x pkg/usr/bin/*.sh
+          # chmod +x pkg/usr/bin/*.sh
 
           # Copy man pages
           cp src/man/man1/*.1 pkg/usr/share/man/man1/
