@@ -2,7 +2,8 @@ name: Build and Release .deb Package
 
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
 
 permissions:
@@ -16,6 +17,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensures all tags are fetched
+
+      - name: Extract version from Git tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
       - name: Install dependencies
         run: |
@@ -29,19 +36,16 @@ jobs:
           mkdir -p pkg/usr/share/man/man1
           mkdir -p pkg/usr/share/doc/linux-tools
 
-          # Copy existing control file
+          # Copy existing control file and update version
           cp debian/control pkg/DEBIAN/control
+          sed -i "s/^Version: .*/Version: ${VERSION}/" pkg/DEBIAN/control
 
           # Copy all scripts to /usr/bin/
           cp src/scripts/*.sh pkg/usr/bin/
-
-          # Make scripts executable
           chmod +x pkg/usr/bin/*.sh
 
-          # Copy man pages
+          # Copy and compress man pages
           cp src/man/man1/*.1 pkg/usr/share/man/man1/
-
-          # Compress man pages
           gzip -f pkg/usr/share/man/man1/*.1
 
           # Copy documentation
@@ -54,19 +58,18 @@ jobs:
           fi
 
       - name: Build .deb Package
-        run: dpkg-deb --build pkg linux-tools_1.0.0-1_all.deb
+        run: dpkg-deb --build pkg linux-tools_${VERSION}_all.deb
 
       - name: Upload Debian package artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-tools-deb
-          path: linux-tools_1.0.0-1_all.deb
+          path: linux-tools_${{ env.VERSION }}_all.deb
 
   release:
     name: Create GitHub Release
     needs: build-deb
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repository
@@ -77,13 +80,13 @@ jobs:
         with:
           name: linux-tools-deb
 
-      - name: Create GitHub Release
+      - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: linux-tools.deb
-          tag_name: v1.0.0
-          release_name: "Release v1.0.0"
-          body: "🚀 New Debian package release: **v1.0.0**"
+          files: linux-tools_${{ env.VERSION }}_all.deb
+          tag_name: v${{ env.VERSION }}
+          release_name: "Release v${{ env.VERSION }}"
+          body: "🚀 New Debian package release: **v${{ env.VERSION }}**"
           draft: false
           prerelease: false
           overwrite: true
